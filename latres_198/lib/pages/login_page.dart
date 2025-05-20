@@ -1,7 +1,7 @@
-// pages/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'register_page.dart';
+import 'restaurant_list.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -19,8 +19,9 @@ class _LoginPageState extends State<LoginPage> {
 
     if (_usernameController.text == savedUsername &&
         _passwordController.text == savedPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login Berhasil')),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => RestaurantListPage()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
