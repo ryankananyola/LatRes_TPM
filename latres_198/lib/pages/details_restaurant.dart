@@ -1,83 +1,145 @@
-// pages/details_restaurant.dart
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../models/restaurant_detail_model.dart';
+import '../services/restaurant_service.dart';
+import '../services/favorite_service.dart';
+import '../models/restaurant_model.dart'; 
 
-class RestaurantDetailPage extends StatefulWidget {
+
+class RestaurantDetailScreen extends StatefulWidget {
   final String restaurantId;
 
-  const RestaurantDetailPage({required this.restaurantId});
+  const RestaurantDetailScreen({super.key, required this.restaurantId});
 
   @override
-  _RestaurantDetailPageState createState() => _RestaurantDetailPageState();
+  State<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
 }
 
-class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
-  Map<String, dynamic>? detail;
-  bool isLoading = true;
+class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
+  late Future<RestaurantDetail> _detailFuture;
+  bool isFavorite = false;
 
   @override
   void initState() {
     super.initState();
-    fetchDetail();
+    _detailFuture = RestaurantService.fetchRestaurantDetail(widget.restaurantId);
+    _loadFavoriteStatus(widget.restaurantId);
   }
 
-  Future<void> fetchDetail() async {
-    final response = await http.get(
-      Uri.parse("https://restaurant-api.dicoding.dev/detail/${widget.restaurantId}"),
-    );
-
-    if (response.statusCode == 200) {
-      final result = json.decode(response.body);
+  void _loadFavoriteStatus(String id) async {
+    final status = await FavoriteService.isFavorite(id);
+    if (mounted) {
       setState(() {
-        detail = result['restaurant'];
-        isLoading = false;
+        isFavorite = status;
       });
-    } else {
-      throw Exception("Gagal memuat detail restoran");
     }
+  }
+
+  void _toggleFavorite(RestaurantDetail restaurant) async {
+    if (isFavorite) {
+      await FavoriteService.removeFavorite(restaurant.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Dihapus dari favorit'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      // Untuk addFavorite, kamu bisa pakai RestaurantDetail.toJson() jika ada,
+      // atau convert ke Restaurant dulu, sesuaikan modelmu.
+      await FavoriteService.addFavorite(
+        // Asumsi kamu punya Restaurant dari RestaurantDetail,
+        // buat objek Restaurant untuk disimpan di favorit:
+        Restaurant(
+          id: restaurant.id,
+          name: restaurant.name,
+          description: restaurant.description,
+          pictureId: restaurant.pictureId,
+          city: restaurant.city,
+          rating: restaurant.rating,
+        ),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ditambahkan ke favorit'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+    setState(() {
+      isFavorite = !isFavorite;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Detail Restoran")),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.network(
-                      'https://restaurant-api.dicoding.dev/images/small/${detail!['pictureId']}',
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                    SizedBox(height: 10),
-                    Text(detail!['name'], style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                    Text("Kota: ${detail!['city']}"),
-                    SizedBox(height: 10),
-                    IconButton(
-                    icon: Icon(Icons.favorite_border),
-                      onPressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        final list = prefs.getStringList('favorite_restaurants') ?? [];
-                        if (!list.contains(widget.restaurantId)) {
-                          list.add(widget.restaurantId);
-                          await prefs.setStringList('favorite_restaurants', list);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ditambahkan ke favorit')));
-                        }
-                      },
-                    ),
-                    Text(detail!['description']),
-                  ],
+      appBar: AppBar(title: const Text('Restaurants Detail')),
+      body: FutureBuilder<RestaurantDetail>(
+        future: _detailFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final restaurant = snapshot.data!;
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  'https://restaurant-api.dicoding.dev/images/small/${restaurant.pictureId}',
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          restaurant.name,
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.grey,
+                        ),
+                        onPressed: () => _toggleFavorite(restaurant),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 16),
+                      const SizedBox(width: 4),
+                      Text(restaurant.city),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.star, size: 16),
+                      const SizedBox(width: 4),
+                      Text(restaurant.rating.toString()),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(restaurant.description),
+                ),
+              ],
             ),
+          );
+        },
+      ),
     );
   }
 }

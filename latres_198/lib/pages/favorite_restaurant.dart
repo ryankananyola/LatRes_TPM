@@ -1,34 +1,53 @@
-// pages/favorite_restaurant.dart
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../models/restaurant_model.dart';
+import '../services/favorite_service.dart';
+import '../widgets/restaurant_card.dart';
 
-class FavoriteRestaurantPage extends StatelessWidget {
-  const FavoriteRestaurantPage({super.key});
+class FavoriteScreen extends StatefulWidget {
+  const FavoriteScreen({super.key});
 
-  Future<List<String>> getFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList('favorite_restaurants') ?? [];
+  @override
+  State<FavoriteScreen> createState() => _FavoriteScreenState();
+}
+
+class _FavoriteScreenState extends State<FavoriteScreen> with RouteAware {
+  late Future<List<Restaurant>> _favorites;
+
+  @override
+  void initState() {
+    super.initState();
+    _favorites = FavoriteService.getFavorites();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Set ulang favorite saat kembali ke halaman ini
+    setState(() {
+      _favorites = FavoriteService.getFavorites();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Restoran Favorit")),
-      body: FutureBuilder<List<String>>(
-        future: getFavorites(),
+      appBar: AppBar(title: const Text('Restoran Favorit')),
+      body: FutureBuilder<List<Restaurant>>(
+        future: _favorites,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
-            return Center(child: CircularProgressIndicator());
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.data == null || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Belum ada restoran favorit.'));
+          }
 
-          final data = snapshot.data!;
-          if (data.isEmpty) return Center(child: Text("Belum ada favorit"));
-
+          final restaurants = snapshot.data!;
           return ListView.builder(
-            itemCount: data.length,
-            itemBuilder: (context, i) => ListTile(
-              leading: Icon(Icons.favorite, color: Colors.red),
-              title: Text("ID Restoran: ${data[i]}"),
-            ),
+            itemCount: restaurants.length,
+            itemBuilder: (context, index) {
+              return RestaurantCard(restaurant: restaurants[index]);
+            },
           );
         },
       ),
