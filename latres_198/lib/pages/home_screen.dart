@@ -23,7 +23,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Restoran'),
+        automaticallyImplyLeading: false, 
+        title: const Text(
+          'Daftar Restoran',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true, 
+        leading: IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Logout',
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/login'); 
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.favorite),
@@ -31,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pushNamed(context, '/favorites');
             },
-          )
+          ),
         ],
       ),
       body: FutureBuilder<List<Restaurant>>(

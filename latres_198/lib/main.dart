@@ -22,11 +22,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Aplikasi Restoran',
+      title: 'Restoran',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.blueGrey,
+        colorSchemeSeed: const Color.fromARGB(255, 219, 243, 255),
       ),
       routes: {
         '/login': (context) => const LoginPage(),
