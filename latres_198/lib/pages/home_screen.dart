@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/restaurant_service.dart';
 import '../models/restaurant_model.dart';
 import '../widgets/restaurant_card.dart';
+import '../services/auth_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,27 +13,41 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Restaurant>> _restaurantFuture;
+  String? _loggedInUsername;
 
   @override
   void initState() {
     super.initState();
     _restaurantFuture = RestaurantService.fetchRestaurants();
+    _loadUsername();
   }
+
+  Future<void> _loadUsername() async {
+    final username = await AuthPreferences.getUsername();
+    setState(() {
+      _loggedInUsername = username;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, 
-        title: const Text(
-          'Daftar Restoran',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          _loggedInUsername != null
+              ? 'Hai, $_loggedInUsername'
+              : 'Daftar Restoran',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        centerTitle: true, 
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.logout),
           tooltip: 'Logout',
-          onPressed: () {
+          onPressed: () async {
+            await AuthPreferences.logout();
+            if (!mounted) return;
             Navigator.pushReplacementNamed(context, '/login'); 
           },
         ),

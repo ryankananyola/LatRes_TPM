@@ -9,7 +9,6 @@ class FavoriteService {
     final prefs = await SharedPreferences.getInstance();
     final List<String> favorites = prefs.getStringList(_key) ?? [];
 
-    // Hindari duplikat
     if (!favorites.any((item) => json.decode(item)['id'] == restaurant.id)) {
       favorites.add(json.encode(restaurant.toJson()));
       await prefs.setStringList(_key, favorites);

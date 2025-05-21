@@ -45,11 +45,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
         ),
       );
     } else {
-      // Untuk addFavorite, kamu bisa pakai RestaurantDetail.toJson() jika ada,
-      // atau convert ke Restaurant dulu, sesuaikan modelmu.
       await FavoriteService.addFavorite(
-        // Asumsi kamu punya Restaurant dari RestaurantDetail,
-        // buat objek Restaurant untuk disimpan di favorit:
         Restaurant(
           id: restaurant.id,
           name: restaurant.name,
@@ -125,9 +121,13 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                       const SizedBox(width: 4),
                       Text(restaurant.city),
                       const SizedBox(width: 12),
-                      const Icon(Icons.star, size: 16),
+                      const Spacer(),
+                      const Icon(Icons.star, size: 16, color: Colors.amber),
                       const SizedBox(width: 4),
-                      Text(restaurant.rating.toString()),
+                      Text(
+                        restaurant.rating.toString(),
+                        style: const TextStyle(fontSize: 14),
+                      ),
                     ],
                   ),
                 ),

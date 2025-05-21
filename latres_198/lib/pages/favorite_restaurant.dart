@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/restaurant_model.dart';
 import '../services/favorite_service.dart';
-import '../widgets/restaurant_card.dart';
+import '../widgets/favoriteRestaurant_card.dart';
 
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key});
@@ -22,7 +22,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> with RouteAware {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Set ulang favorite saat kembali ke halaman ini
     setState(() {
       _favorites = FavoriteService.getFavorites();
     });
@@ -46,9 +45,12 @@ class _FavoriteScreenState extends State<FavoriteScreen> with RouteAware {
           return ListView.builder(
             itemCount: restaurants.length,
             itemBuilder: (context, index) {
-              return RestaurantCard(restaurant: restaurants[index]);
+              return FavoriteRestaurantCard(
+                restaurant: restaurants[index],
+              );
             },
           );
+
         },
       ),
     );

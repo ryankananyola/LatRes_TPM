@@ -6,7 +6,6 @@ import '../models/restaurant_detail_model.dart';
 class RestaurantService {
   static const String baseUrl = 'https://restaurant-api.dicoding.dev';
 
-  /// Fetch daftar restoran dari endpoint /list
   static Future<List<Restaurant>> fetchRestaurants() async {
     final response = await http.get(Uri.parse('$baseUrl/list'));
 
@@ -19,7 +18,6 @@ class RestaurantService {
     }
   }
 
-  /// Fetch detail restoran berdasarkan ID dari endpoint /detail/<id>
   static Future<RestaurantDetail> fetchRestaurantDetail(String id) async {
     final response = await http.get(Uri.parse('$baseUrl/detail/$id'));
 

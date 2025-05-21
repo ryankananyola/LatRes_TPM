@@ -4,8 +4,13 @@ import '../pages/details_restaurant.dart';
 
 class RestaurantCard extends StatelessWidget {
   final Restaurant restaurant;
+  final bool showRating; 
 
-  const RestaurantCard({super.key, required this.restaurant});
+  const RestaurantCard({
+    super.key,
+    required this.restaurant,
+    this.showRating = false, 
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,15 +60,21 @@ class RestaurantCard extends StatelessWidget {
                         restaurant.city,
                         style: const TextStyle(fontSize: 14),
                       ),
-                      const Spacer(),
-                      const Icon(Icons.star, size: 16, color: Colors.amber),
-                      const SizedBox(width: 4),
-                      Text(
-                        restaurant.rating.toString(),
-                        style: const TextStyle(fontSize: 14),
-                      ),
                     ],
                   ),
+                  if (showRating) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, size: 16, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          restaurant.rating.toString(),
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
